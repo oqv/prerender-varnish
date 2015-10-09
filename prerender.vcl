@@ -13,16 +13,17 @@ include "prerender_backend.vcl";
 
 sub vcl_recv {
     if (req.url ~ "_escaped_fragment_|prerender=1" ||
-         req.http.user-agent ~ "baiduspider|twitterbot|facebookexternalhit|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot") {
+        req.http.user-agent ~ "baiduspider|twitterbot|facebookexternalhit|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot") {
 
         if (req.http.user-agent ~ "Prerender") {
-            return(pass);
+          return(pass);
         }
 
-        # FIXME: Add a whitelist of files or filetypes to never prerender
-
-        set req.backend = prerender;
-
+        # If not this kind of file, send to prerender.io
+        if (req.url ~ "^((?!(\.js|\.css|\.xml|\.less|\.png|\.jpg|\.jpeg|\.gif|\.pdf|\.doc|\.txt|\.ico|\.rss|\.zip|\.mp3|\.rar|\.exe|\.wmv|\.doc|\.avi|\.ppt|\.mpg|\.mpeg|\.tif|\.wav|\.mov|\.psd|\.ai|\.xls|\.mp4|\.m4a|\.swf|\.dat|\.dmg|\.iso|\.flv|\.m4v|\.torrent|\.ttf|\.woff)).)*$"){
+          set req.backend = prerender;    
+        }
+        
         # When doing SSL offloading in front of Varnish, set X-Scheme header
         # to "https" before passing the request to Varnish
         if (req.http.X-Scheme !~ "^http(s?)") {
